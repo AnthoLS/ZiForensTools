@@ -12,4 +12,5 @@ def search_proc(target):
         
     return False
 
-print(search_proc("Notion"))
+if __name__ == "__main__" :
+    print(search_proc("Notion"))
