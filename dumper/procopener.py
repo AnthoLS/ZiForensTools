@@ -1,6 +1,11 @@
 import ctypes
 import ctypes.wintypes as wintypes
 from pidsearch import search_proc 
+import argparse
+
+parser = argparse.ArgumentParser(description='Dump ure process')
+parser.add_argument('--pname', type=str, dest='proc_name', required=False, help='Process name')
+args = parser.parse_args()
 
 k32 = ctypes.WinDLL('kernel32', use_last_error=True)
 
@@ -90,4 +95,4 @@ def dumping(proc_name):
     print("[*] Dump terminé avec succès.")
 
 if __name__ == "__main__":
-    dumping("Notion")
+    dumping(args.proc_name)
