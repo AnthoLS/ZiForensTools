@@ -32,41 +32,6 @@ k32.ReadProcessMemory.restype = wintypes.BOOL
 k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
 k32.OpenProcess.restype = wintypes.HANDLE
 
-# Explorer les régions mémoire
-def explorer(process_handle: wintypes.HANDLE):
-    MEM_COMMIT = 0x1000 # Paramètre qui nous permet de voir si la région est actuellement utilisée
-    PAGE_NOACCESS = 0x01
-    PAGE_GUARD = 0x100
-    
-    memaddress = 0
-    regions = []
-
-    while True:
-        mbi = MEMORY_BASIC_INFORMATION()
-        exp = k32.VirtualQueryEx(process_handle,memaddress,ctypes.byref(mbi),ctypes.sizeof(mbi),)
-
-        if exp == 0:
-            error_code = k32.GetLastError()
-            print(f"[-] VirtualQueryEx a échoué à l'adresse {hex(address)}. Code erreur : {error_code}")
-            break
-        
-        print(f"[*] Analyse bloc : {hex(address)} | Taille : {mbi.RegionSize} | État : {hex(mbi.State)}")
-
-        # On vient préviser les No ACCESS et GUARD pour éviter que le dump échoue sur les procees protégés
-        if mbi.State == MEM_COMMIT and not (mbi.Protect & PAGE_NOACCESS) and not (mbi.Protect & PAGE_GUARD):
-                print(f"    [!] Région commit trouvée ! Tentative de lecture...")
-                regions.append(
-                    {
-                        "base_address": mbi.BaseAddress,
-                        "allocation_base": mbi.AllocationBase,
-                        "size": mbi.RegionSize,
-                        "type": mbi.Type,
-                    }
-                )
-        memaddress += mbi.RegionSize
-
-    return regions
-
 # Lire les régions détectées comme occupées, et les retourner en bits
 def reader(process_handle: wintypes.HANDLE, base_address: int, size: int):
     region_data = ctypes.create_string_buffer(size)
@@ -81,25 +46,6 @@ def open_process_handle(pid: int):
     PROCESS_QUERY_INFORMATION = 0x0400
     PROCESS_VM_READ = 0x0010
     return k32.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, False, pid)
-
-def get_memory_snapshot_by_window_title(window_title: str):
-    pid = search_proc(window_title)
-    if not pid:
-        return []
-    
-    process_handle = open_process_handle(pid)
-    if not process_handle:
-        return []
-
-    regions = explorer(process_handle)
-
-    for i in range(len(regions)):
-        data = reader(process_handle, regions[i]["base_address"], regions[i]["size"])
-        regions[i]["data"] = data
-
-    k32.CloseHandle(process_handle)
-
-    return regions
 
 def dumping(proc_name):
     pid = search_proc(proc_name)
