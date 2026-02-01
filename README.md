@@ -1,11 +1,4 @@
-# README
-
 # ZiForensTools
-
-> Forensic utilities
-> 
-
----
 
 ## Schedscan
 
@@ -22,8 +15,6 @@ python3 .\schedscan.py
 ```
 
 You can use `-w` flag to specify a whitelist file. It have to be a `.txt` where each string is on one line and then another like the example in the repo.
-
----
 
 ## Dumper
 
